@@ -1,6 +1,7 @@
 package com.storms.ebanxassignment.service;
 
 import com.storms.ebanxassignment.domain.Account;
+import com.storms.ebanxassignment.exception.AccountNotFoundException;
 import com.storms.ebanxassignment.domain.Deposit;
 import com.storms.ebanxassignment.domain.Event;
 import com.storms.ebanxassignment.domain.EventResult;
@@ -33,7 +34,11 @@ public class TransactionService {
     }
 
     public EventResult withdraw(Withdraw withdraw) {
-        throw new UnsupportedOperationException("Withdraw not implemented yet");
+        Account account = accountRepository.findById(withdraw.origin())
+                .orElseThrow(() -> new AccountNotFoundException(withdraw.origin()));
+
+        Account updated = accountRepository.save(account.withdraw(withdraw.amount()));
+        return EventResult.withOrigin(updated);
     }
 
     public EventResult transfer(Transfer transfer) {

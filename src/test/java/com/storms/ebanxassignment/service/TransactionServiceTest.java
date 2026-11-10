@@ -1,8 +1,10 @@
 package com.storms.ebanxassignment.service;
 
 import com.storms.ebanxassignment.domain.Account;
+import com.storms.ebanxassignment.exception.AccountNotFoundException;
 import com.storms.ebanxassignment.domain.Deposit;
 import com.storms.ebanxassignment.domain.EventResult;
+import com.storms.ebanxassignment.exception.InsufficientFundsException;
 import com.storms.ebanxassignment.domain.Transfer;
 import com.storms.ebanxassignment.domain.Withdraw;
 import com.storms.ebanxassignment.repository.AccountRepository;
@@ -34,14 +36,13 @@ class TransactionServiceTest {
 
     @Test
     void withdrawEventCallsWithdrawAndReturnsOrigin() {
+        accountRepository.save(new Account("100", new BigDecimal("20")));
         var withdraw = new Withdraw("100", new BigDecimal("5"));
-        var origin = new Account("100", new BigDecimal("15"));
-        doReturn(EventResult.withOrigin(origin)).when(service).withdraw(withdraw);
 
         EventResult result = service.event(withdraw);
 
         verify(service).withdraw(withdraw);
-        assertThat(result).isEqualTo(EventResult.withOrigin(origin));
+        assertThat(result).isEqualTo(EventResult.withOrigin(new Account("100", new BigDecimal("15"))));
     }
 
     @Test
@@ -89,6 +90,46 @@ class TransactionServiceTest {
         accountRepository.save(new Account("100", new BigDecimal("10")));
 
         assertThatThrownBy(() -> service.deposit(new Deposit("100", new BigDecimal("-10"))))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(accountRepository.findById("100")).contains(new Account("100", new BigDecimal("10")));
+    }
+
+    @Test
+    void withdrawSubtractsFromExistingBalance() {
+        accountRepository.save(new Account("100", new BigDecimal("20")));
+
+        EventResult result = service.withdraw(new Withdraw("100", new BigDecimal("5")));
+
+        var expected = new Account("100", new BigDecimal("15"));
+        assertThat(result).isEqualTo(EventResult.withOrigin(expected));
+        assertThat(accountRepository.findById("100")).contains(expected);
+    }
+
+    @Test
+    void withdrawFromNonExistingAccountThrowsAndCreatesNothing() {
+        assertThatThrownBy(() -> service.withdraw(new Withdraw("200", new BigDecimal("10"))))
+                .isInstanceOf(AccountNotFoundException.class)
+                .hasMessageContaining("200");
+
+        assertThat(accountRepository.findById("200")).isEmpty();
+    }
+
+    @Test
+    void withdrawWithInsufficientFundsKeepsBalance() {
+        accountRepository.save(new Account("100", new BigDecimal("10")));
+
+        assertThatThrownBy(() -> service.withdraw(new Withdraw("100", new BigDecimal("15"))))
+                .isInstanceOf(InsufficientFundsException.class);
+
+        assertThat(accountRepository.findById("100")).contains(new Account("100", new BigDecimal("10")));
+    }
+
+    @Test
+    void withdrawRejectsNegativeAmountAndKeepsBalance() {
+        accountRepository.save(new Account("100", new BigDecimal("10")));
+
+        assertThatThrownBy(() -> service.withdraw(new Withdraw("100", new BigDecimal("-5"))))
                 .isInstanceOf(IllegalArgumentException.class);
 
         assertThat(accountRepository.findById("100")).contains(new Account("100", new BigDecimal("10")));

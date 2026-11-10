@@ -53,6 +53,38 @@ class TransactionControllerIntegrationTest {
                 """);
     }
 
+    @Test
+    void withdrawFromNonExistingAccountReturnsNotFound() throws Exception {
+        mockMvc.perform(post("/event")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"type":"withdraw", "origin":"200", "amount":10}
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("0"));
+    }
+
+    @Test
+    void withdrawFromExistingAccountSubtractsFromBalance() throws Exception {
+        postEvent("""
+                {"type":"deposit", "destination":"100", "amount":10}
+                """, """
+                {"destination": {"id":"100", "balance":10}}
+                """);
+
+        postEvent("""
+                {"type":"deposit", "destination":"100", "amount":10}
+                """, """
+                {"destination": {"id":"100", "balance":20}}
+                """);
+
+        postEvent("""
+                {"type":"withdraw", "origin":"100", "amount":5}
+                """, """
+                {"origin": {"id":"100", "balance":15}}
+                """);
+    }
+
     private void postEvent(String request, String expectedResponse) throws Exception {
         mockMvc.perform(post("/event")
                         .contentType(MediaType.APPLICATION_JSON)

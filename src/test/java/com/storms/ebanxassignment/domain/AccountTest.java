@@ -1,5 +1,6 @@
 package com.storms.ebanxassignment.domain;
 
+import com.storms.ebanxassignment.exception.InsufficientFundsException;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -55,6 +56,59 @@ class AccountTest {
         var account = new Account("100", new BigDecimal("10"));
 
         assertThatThrownBy(() -> account.deposit(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void withdrawSubtractsAmountFromBalance() {
+        var account = new Account("100", new BigDecimal("20"));
+
+        Account updated = account.withdraw(new BigDecimal("5"));
+
+        assertThat(updated).isEqualTo(new Account("100", new BigDecimal("15")));
+    }
+
+    @Test
+    void withdrawOfWholeBalanceLeavesZero() {
+        var account = new Account("100", new BigDecimal("20"));
+
+        Account updated = account.withdraw(new BigDecimal("20"));
+
+        assertThat(updated).isEqualTo(new Account("100", new BigDecimal("0")));
+    }
+
+    @Test
+    void withdrawDoesNotChangeOriginalAccount() {
+        var account = new Account("100", new BigDecimal("20"));
+
+        account.withdraw(new BigDecimal("5"));
+
+        assertThat(account.balance()).isEqualTo(new BigDecimal("20"));
+    }
+
+    @Test
+    void withdrawRejectsAmountGreaterThanBalance() {
+        var account = new Account("100", new BigDecimal("20"));
+
+        assertThatThrownBy(() -> account.withdraw(new BigDecimal("21")))
+                .isInstanceOf(InsufficientFundsException.class)
+                .hasMessageContaining("100");
+    }
+
+    @Test
+    void withdrawRejectsNegativeAmount() {
+        var account = new Account("100", new BigDecimal("20"));
+
+        assertThatThrownBy(() -> account.withdraw(new BigDecimal("-1")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Withdraw amount must not be negative");
+    }
+
+    @Test
+    void withdrawRejectsNullAmount() {
+        var account = new Account("100", new BigDecimal("20"));
+
+        assertThatThrownBy(() -> account.withdraw(null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }
