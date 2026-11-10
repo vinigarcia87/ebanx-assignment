@@ -42,6 +42,20 @@ public class TransactionService {
     }
 
     public EventResult transfer(Transfer transfer) {
-        throw new UnsupportedOperationException("Transfer not implemented yet");
+        if (transfer.origin().equals(transfer.destination())) {
+            throw new IllegalArgumentException("Origin and destination must be different accounts");
+        }
+
+        Account origin = accountRepository.findById(transfer.origin())
+                .orElseThrow(() -> new AccountNotFoundException(transfer.origin()));
+        Account destination = accountRepository.findById(transfer.destination())
+                .orElseGet(() -> Account.empty(transfer.destination()));
+
+        Account updatedOrigin = origin.withdraw(transfer.amount());
+        Account updatedDestination = destination.deposit(transfer.amount());
+
+        return new EventResult(
+                accountRepository.save(updatedOrigin),
+                accountRepository.save(updatedDestination));
     }
 }
