@@ -97,4 +97,13 @@ class TransactionControllerTest {
         assertThatThrownBy(() -> controller.balance("1234"))
                 .isInstanceOf(AccountNotFoundException.class);
     }
+
+    @Test
+    void resetCallsServiceAndReturnsOk() {
+        ResponseEntity<String> response = controller.reset();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo("OK");
+        verify(transactionService).reset();
+    }
 }

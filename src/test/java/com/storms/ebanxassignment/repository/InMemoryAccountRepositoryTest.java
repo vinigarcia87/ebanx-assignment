@@ -30,4 +30,15 @@ class InMemoryAccountRepositoryTest {
 
         assertThat(repository.findById("100")).contains(new Account("100", new BigDecimal("25")));
     }
+
+    @Test
+    void deleteAllRemovesEveryAccount() {
+        repository.save(new Account("100", new BigDecimal("10")));
+        repository.save(new Account("300", new BigDecimal("15")));
+
+        repository.deleteAll();
+
+        assertThat(repository.findById("100")).isEmpty();
+        assertThat(repository.findById("300")).isEmpty();
+    }
 }

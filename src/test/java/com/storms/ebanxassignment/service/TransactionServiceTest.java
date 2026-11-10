@@ -215,4 +215,15 @@ class TransactionServiceTest {
                 .isInstanceOf(AccountNotFoundException.class)
                 .hasMessageContaining("1234");
     }
+
+    @Test
+    void resetRemovesAllAccounts() {
+        accountRepository.save(new Account("100", new BigDecimal("10")));
+        accountRepository.save(new Account("300", new BigDecimal("15")));
+
+        service.reset();
+
+        assertThat(accountRepository.findById("100")).isEmpty();
+        assertThat(accountRepository.findById("300")).isEmpty();
+    }
 }

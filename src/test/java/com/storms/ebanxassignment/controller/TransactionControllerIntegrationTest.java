@@ -31,6 +31,13 @@ class TransactionControllerIntegrationTest {
     }
 
     @Test
+    void resetReturnsOk() throws Exception {
+        mockMvc.perform(post("/reset"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("OK"));
+    }
+
+    @Test
     void balanceOfNonExistingAccountReturnsNotFound() throws Exception {
         mockMvc.perform(get("/balance").param("account_id", "1234"))
                 .andExpect(status().isNotFound())

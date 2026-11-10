@@ -21,6 +21,12 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
+    @PostMapping("/reset")
+    public ResponseEntity<String> reset() {
+        transactionService.reset();
+        return ResponseEntity.ok("OK");
+    }
+
     @PostMapping("/event")
     public ResponseEntity<EventResponse> event(@RequestBody EventRequest request) {
         EventResult result = transactionService.event(request.toEvent());

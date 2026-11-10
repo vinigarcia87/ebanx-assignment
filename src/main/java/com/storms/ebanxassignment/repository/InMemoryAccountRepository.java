@@ -24,4 +24,9 @@ public class InMemoryAccountRepository implements AccountRepository {
         balances.put(account.id(), account.balance());
         return account;
     }
+
+    @Override
+    public void deleteAll() {
+        balances.clear();
+    }
 }

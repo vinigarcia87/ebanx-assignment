@@ -19,6 +19,10 @@ public class TransactionService {
 
     private final AccountRepository accountRepository;
 
+    public void reset() {
+        accountRepository.deleteAll();
+    }
+
     public BigDecimal balance(String accountId) {
         return accountRepository.findById(accountId)
                 .map(Account::balance)

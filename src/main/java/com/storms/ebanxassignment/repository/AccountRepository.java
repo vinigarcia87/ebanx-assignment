@@ -9,4 +9,6 @@ public interface AccountRepository {
     Optional<Account> findById(String id);
 
     Account save(Account account);
+
+    void deleteAll();
 }
