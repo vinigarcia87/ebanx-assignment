@@ -1,9 +1,6 @@
 package com.storms.ebanxassignment.controller;
 
-import com.storms.ebanxassignment.domain.Deposit;
-import com.storms.ebanxassignment.domain.EventRequest;
-import com.storms.ebanxassignment.domain.Transfer;
-import com.storms.ebanxassignment.domain.Withdraw;
+import com.storms.ebanxassignment.domain.*;
 import com.storms.ebanxassignment.service.TransactionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionControllerTest {
@@ -31,33 +29,43 @@ class TransactionControllerTest {
     private TransactionController controller;
 
     @Test
-    void depositEventIsSentToServiceAndReturnsCreated() {
+    void depositReturnsCreatedWithDestinationAccount() {
         var request = new EventRequest("deposit", null, "100", new BigDecimal("10"));
+        var destination = new Account("100", new BigDecimal("10"));
+        when(transactionService.event(new Deposit("100", new BigDecimal("10"))))
+                .thenReturn(EventResult.withDestination(destination));
 
-        ResponseEntity<Void> response = controller.event(request);
+        ResponseEntity<EventResponse> response = controller.event(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        verify(transactionService).event(new Deposit("100", new BigDecimal("10")));
+        assertThat(response.getBody()).isEqualTo(new EventResponse(null, destination));
     }
 
     @Test
-    void withdrawEventIsSentToServiceAndReturnsCreated() {
+    void withdrawReturnsCreatedWithOriginAccount() {
         var request = new EventRequest("withdraw", "100", null, new BigDecimal("5"));
+        var origin = new Account("100", new BigDecimal("15"));
+        when(transactionService.event(new Withdraw("100", new BigDecimal("5"))))
+                .thenReturn(EventResult.withOrigin(origin));
 
-        ResponseEntity<Void> response = controller.event(request);
+        ResponseEntity<EventResponse> response = controller.event(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        verify(transactionService).event(new Withdraw("100", new BigDecimal("5")));
+        assertThat(response.getBody()).isEqualTo(new EventResponse(origin, null));
     }
 
     @Test
-    void transferEventIsSentToServiceAndReturnsCreated() {
+    void transferReturnsCreatedWithBothAccounts() {
         var request = new EventRequest("transfer", "100", "300", new BigDecimal("15"));
+        var origin = new Account("100", BigDecimal.ZERO);
+        var destination = new Account("300", new BigDecimal("15"));
+        when(transactionService.event(new Transfer("100", "300", new BigDecimal("15"))))
+                .thenReturn(new EventResult(origin, destination));
 
-        ResponseEntity<Void> response = controller.event(request);
+        ResponseEntity<EventResponse> response = controller.event(request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        verify(transactionService).event(new Transfer("100", "300", new BigDecimal("15")));
+        assertThat(response.getBody()).isEqualTo(new EventResponse(origin, destination));
     }
 
     @Test

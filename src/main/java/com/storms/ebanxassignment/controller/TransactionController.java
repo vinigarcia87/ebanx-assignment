@@ -1,6 +1,8 @@
 package com.storms.ebanxassignment.controller;
 
 import com.storms.ebanxassignment.domain.EventRequest;
+import com.storms.ebanxassignment.domain.EventResponse;
+import com.storms.ebanxassignment.domain.EventResult;
 import com.storms.ebanxassignment.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,9 +20,9 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping("/event")
-    public ResponseEntity<Void> event(@RequestBody EventRequest request) {
-        transactionService.event(request.toEvent());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<EventResponse> event(@RequestBody EventRequest request) {
+        EventResult result = transactionService.event(request.toEvent());
+        return ResponseEntity.status(HttpStatus.CREATED).body(EventResponse.from(result));
     }
 
     @GetMapping("/balance")
