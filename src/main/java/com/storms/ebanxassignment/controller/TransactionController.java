@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequiredArgsConstructor
 public class TransactionController {
@@ -26,8 +28,7 @@ public class TransactionController {
     }
 
     @GetMapping("/balance")
-    public ResponseEntity<?> balance(@RequestParam("account_id") String accountId) {
-        // TODO: balance
-        return ResponseEntity.ok(0);
+    public ResponseEntity<BigDecimal> balance(@RequestParam("account_id") String accountId) {
+        return ResponseEntity.ok(transactionService.balance(accountId));
     }
 }

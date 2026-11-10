@@ -11,11 +11,19 @@ import com.storms.ebanxassignment.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
 
     private final AccountRepository accountRepository;
+
+    public BigDecimal balance(String accountId) {
+        return accountRepository.findById(accountId)
+                .map(Account::balance)
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
+    }
 
     public EventResult event(Event event) {
         return switch (event) {

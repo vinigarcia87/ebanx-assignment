@@ -201,4 +201,18 @@ class TransactionServiceTest {
 
         assertThat(accountRepository.findById("100")).contains(new Account("100", new BigDecimal("10")));
     }
+
+    @Test
+    void balanceReturnsCurrentBalanceOfExistingAccount() {
+        accountRepository.save(new Account("100", new BigDecimal("20")));
+
+        assertThat(service.balance("100")).isEqualTo(new BigDecimal("20"));
+    }
+
+    @Test
+    void balanceOfNonExistingAccountThrows() {
+        assertThatThrownBy(() -> service.balance("1234"))
+                .isInstanceOf(AccountNotFoundException.class)
+                .hasMessageContaining("1234");
+    }
 }

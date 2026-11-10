@@ -1,6 +1,7 @@
 package com.storms.ebanxassignment.controller;
 
 import com.storms.ebanxassignment.domain.*;
+import com.storms.ebanxassignment.exception.AccountNotFoundException;
 import com.storms.ebanxassignment.service.TransactionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,5 +78,23 @@ class TransactionControllerTest {
                 .hasMessageContaining("refund");
 
         verify(transactionService, never()).event(any());
+    }
+
+    @Test
+    void balanceReturnsOkWithAccountBalance() {
+        when(transactionService.balance("100")).thenReturn(new BigDecimal("20"));
+
+        ResponseEntity<BigDecimal> response = controller.balance("100");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(new BigDecimal("20"));
+    }
+
+    @Test
+    void balanceOfNonExistingAccountPropagatesNotFound() {
+        when(transactionService.balance("1234")).thenThrow(new AccountNotFoundException("1234"));
+
+        assertThatThrownBy(() -> controller.balance("1234"))
+                .isInstanceOf(AccountNotFoundException.class);
     }
 }
